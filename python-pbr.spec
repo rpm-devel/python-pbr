@@ -1,21 +1,16 @@
 %global pypi_name pbr
 
-%if 0%{?fedora} || 0%{?rhel} > 7
-%global with_python3 1
-%global do_test 0
-%endif
-
 Name:           python-%{pypi_name}
-Version:        5.1.2
-Release:        2%{?dist}
+Version:        7.0.3
+Release:        1%{?dist}
 Summary:        Python Build Reasonableness
 
 License:        ASL 2.0
 URL:            http://pypi.python.org/pypi/pbr
 Source0:        https://pypi.io/packages/source/p/%{pypi_name}/%{pypi_name}-%{version}.tar.gz
 
-BuildRequires: python2-sphinx >= 1.1.3
-#BuildRequires: python2-openstackdocstheme
+BuildRequires: python%{python3_pkgversion}-sphinx >= 1.1.3
+#BuildRequires: python%{python3_pkgversion}-openstackdocstheme
 
 %description
 PBR is a library that injects some useful and sensible default behaviors into
@@ -24,43 +19,17 @@ between all of the OpenStack projects. Around the time that OpenStack hit 18
 different projects each with at least 3 active branches, it seems like a good
 time to make that code into a proper re-usable library.
 
-%package -n python2-%{pypi_name}
-Summary:        Python Build Reasonableness
-%{?python_provide:%python_provide python2-%{pypi_name}}
-
-BuildRequires:  python2-devel
-BuildRequires:  python2-setuptools
-%if 0%{?do_test} == 1
-BuildRequires:  python2-coverage
-BuildRequires:  python2-hacking
-BuildRequires:  python2-mock
-BuildRequires:  python2-testrepository
-BuildRequires:  python2-testresources
-BuildRequires:  python2-testscenarios
-BuildRequires:  gcc
-BuildRequires:  git
-BuildRequires:  gnupg
-%endif
-Requires:       python2-setuptools
-Requires:       git-core
-
-%description -n python2-%{pypi_name}
-Manage dynamic plugins for Python applications
-
-
-%if 0%{?with_python3}
 %package -n python3-%{pypi_name}
 Summary:        Python Build Reasonableness
 %{?python_provide:%python_provide python3-%{pypi_name}}
 
-BuildRequires:  python3-devel
-BuildRequires:  python3-setuptools
-Requires:       python3-setuptools
+BuildRequires:  python%{python3_pkgversion}-devel
+BuildRequires:  python%{python3_pkgversion}-setuptools
+Requires:       python%{python3_pkgversion}-setuptools
 Requires:       git-core
 
 %description -n python3-%{pypi_name}
 Manage dynamic plugins for Python applications
-%endif
 
 %prep
 %setup -q -n %{pypi_name}-%{version}
@@ -70,11 +39,7 @@ rm -rf {test-,}requirements.txt pbr.egg-info/requires.txt
 
 %build
 export SKIP_PIP_INSTALL=1
-%py2_build
-
-%if 0%{?with_python3}
 %py3_build
-%endif
 
 # generate html docs
 sphinx-build doc/source html
@@ -83,40 +48,23 @@ rm -rf html/.{doctrees,buildinfo}
 
 
 %install
-# Must do the python3 install first because the scripts in /usr/bin are
-# overwritten with every setup.py install (and we want the python2 version
-# to be the default for now).
-%if 0%{?with_python3}
 %py3_install
 rm -rf %{buildroot}%{python3_sitelib}/pbr/tests
-mv %{buildroot}%{_bindir}/pbr %{buildroot}%{_bindir}/pbr-3
-%endif
 
-%py2_install
-rm -rf %{buildroot}%{python2_sitelib}/pbr/tests
-
-%if 0%{?do_test}
-%check
-%{__python2} setup.py test
-%endif
-
-%files -n python2-%{pypi_name}
+%files -n python3-%{pypi_name}
 %license LICENSE
 %doc html README.rst
 %{_bindir}/pbr
-%{python2_sitelib}/*.egg-info
-%{python2_sitelib}/%{pypi_name}
-
-%if 0%{?with_python3}
-%files -n python3-pbr
-%license LICENSE
-%doc html README.rst
-%{_bindir}/pbr-3
 %{python3_sitelib}/*.egg-info
 %{python3_sitelib}/%{pypi_name}
-%endif
 
 %changelog
+* Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 7.0.3-1
+- Update to 7.0.3
+
+* Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 5.1.2-3
+- Modernize for AlmaLinux 10: python3 only, remove obsolete spec constructs
+
 * Thu Feb 07 2019 Javier Peña <jpena@redhat.com> - 5.1.2-2
 - Fix doc requirements
 
